@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { registerSW } from 'virtual:pwa-register';
 
-// Register Service Worker immediately for offline capability and PWA support
+// Register Service Worker for PWA installability and offline capability
 registerSW({
   immediate: true,
   onNeedRefresh() {
@@ -13,6 +13,17 @@ registerSW({
     console.log('Aplikasi OPR sedia untuk digunakan di luar talian (offline).');
   },
 });
+
+// Explicit service worker fallback registration for mobile browsers
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      console.log('PWA ServiceWorker registered with scope: ', reg.scope);
+    }).catch((err) => {
+      console.warn('PWA ServiceWorker fallback registration note: ', err);
+    });
+  });
+}
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

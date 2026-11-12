@@ -9,6 +9,8 @@ export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
@@ -23,10 +25,15 @@ export function usePWAInstall() {
     setIsStandalone(standalone);
     setIsInstalled(standalone);
 
-    // Detect iOS devices (iPhone, iPad, iPod)
+    // Detect User Agent
     const ua = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroidDevice = /android/.test(ua);
+    const inApp = /fban|fbav|instagram|line|micromessenger|whatsapp|telegram|snapchat|threads|tiktok/i.test(ua);
+
     setIsIOS(isIOSDevice);
+    setIsAndroid(isAndroidDevice);
+    setIsInAppBrowser(inApp);
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -68,6 +75,8 @@ export function usePWAInstall() {
     isInstalled,
     isStandalone,
     isIOS,
+    isAndroid,
+    isInAppBrowser,
     install,
   };
 }

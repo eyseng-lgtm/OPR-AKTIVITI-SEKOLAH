@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Smartphone, Apple, CheckCircle2, X, Share2, PlusSquare, ArrowUpRight, Sparkles } from 'lucide-react';
+import { Smartphone, Apple, CheckCircle2, X, Share2, PlusSquare, AlertTriangle, Sparkles } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -13,20 +13,20 @@ export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
         className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-800 text-white p-5 flex items-start justify-between">
+        <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-blue-900 text-white p-5 flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
-              <Smartphone className="w-6 h-6 text-blue-200" />
+              <Smartphone className="w-6 h-6 text-emerald-300" />
             </div>
             <div>
-              <h3 className="font-bold text-lg leading-tight">Pasang di Telefon Pintar</h3>
-              <p className="text-xs text-blue-200 mt-0.5">Panduan Pemasangan Android & Apple iOS</p>
+              <h3 className="font-bold text-lg leading-tight">Panduan Memasang di Telefon</h3>
+              <p className="text-xs text-blue-200 mt-0.5">SJK Chung Hua Bau OPR 2026</p>
             </div>
           </div>
           <button 
@@ -42,9 +42,9 @@ export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab
         <div className="grid grid-cols-2 p-2 bg-slate-100 border-b border-slate-200">
           <button
             onClick={() => setActiveTab('android')}
-            className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all ${
+            className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               activeTab === 'android'
-                ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/60'
+                ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/80'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -53,9 +53,9 @@ export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab
           </button>
           <button
             onClick={() => setActiveTab('ios')}
-            className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all ${
+            className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               activeTab === 'ios'
-                ? 'bg-white text-blue-800 shadow-sm border border-slate-200/60'
+                ? 'bg-white text-blue-900 shadow-sm border border-slate-200/80'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -66,115 +66,130 @@ export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab
 
         {/* Content area */}
         <div className="p-5 overflow-y-auto space-y-4">
-          {activeTab === 'android' ? (
-            <div className="space-y-4">
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>Aplikasi ini menyokong mod luar talian (offline) sepenuhnya selepas dipasang di Android.</span>
-              </div>
+          {/* Important WhatsApp / Social Browser Notice */}
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="font-bold">Penting: Jangan pasang dari dalam WhatsApp!</p>
+              <p className="leading-relaxed">
+                Pelayar dalaman WhatsApp tidak membenarkan pemasangan aplikasi. Sila tekan ikon <strong>Menu 3 Titik (⋮)</strong> di atas skrin dan pilih <strong>"Buka dalam Chrome"</strong> (untuk Android) atau <strong>"Buka dalam Safari"</strong> (untuk iPhone).
+              </p>
+            </div>
+          </div>
 
-              <div className="space-y-3 text-sm">
-                <div className="flex gap-3 items-start">
+          {activeTab === 'android' ? (
+            <div className="space-y-3.5">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Langkah Pemasangan di Android (Google Chrome):
+              </h4>
+
+              <div className="space-y-3 text-xs sm:text-sm">
+                <div className="flex gap-3 items-start p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">
                     1
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">Buka di Pelayar Google Chrome</p>
-                    <p className="text-xs text-slate-600 mt-0.5">Pastikan anda membuka pautan aplikasi ini menggunakan Google Chrome atau Samsung Internet di telefon Android anda.</p>
+                    <p className="font-bold text-slate-900">Buka di Pelayar Google Chrome</p>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Buka pautan aplikasi di pelayar rasmi <strong>Chrome</strong> atau <strong>Samsung Internet</strong>.
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 items-start">
+                <div className="flex gap-3 items-start p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">
                     2
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">Tekan Butang 'Pasang Aplikasi'</p>
+                    <p className="font-bold text-slate-900">Tekan Menu 3 Titik (⋮) Chrome</p>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      Tekan butang hijau <strong>"Pasang di Telefon"</strong> yang dipaparkan pada bar atas aplikasi.
+                      Di penjuru kanan atas pelayar Chrome telefon anda, tekan butang <strong>Menu 3 Titik (⋮)</strong>.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 items-start">
+                <div className="flex gap-3 items-start p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">
                     3
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">Pilihan Alternatif melalui Menu Chrome</p>
+                    <p className="font-bold text-slate-900">Pilih "Pasang Aplikasi" (Install App)</p>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      Jika butang tidak muncul, tekan butang <strong>Menu 3 Titik (⋮)</strong> di penjuru atas kanan pelayar Chrome, kemudian pilih <strong>"Pasang aplikasi"</strong> atau <strong>"Tambah ke skrin Utama" (Add to Home screen)</strong>.
+                      Skrol dan tekan pilihan <strong>"Pasang aplikasi" (Install app)</strong> atau <strong>"Tambah ke skrin Utama" (Add to Home screen)</strong>.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 items-start">
+                <div className="flex gap-3 items-start p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">
                     4
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">Selesai!</p>
-                    <p className="text-xs text-slate-600 mt-0.5">Ikon "OPR 2026" akan wujud di skrin utama telefon anda, sedia digunakan bila-bila masa walaupun tiada sambungan internet.</p>
+                    <p className="font-bold text-slate-900">Tekan "Pasang" (Install)</p>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Sahkan dengan menekan butang <strong>"Pasang"</strong>. Aplikasi OPR 2026 akan terus muncul di skrin telefon anda seperti aplikasi Play Store!
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center gap-2">
-                <Apple className="w-4 h-4 text-blue-700 flex-shrink-0" />
-                <span>Untuk Apple iOS, pemasangan dilakukan dengan mudah melalui pelayar rasmi <strong>Safari</strong>.</span>
-              </div>
+            <div className="space-y-3.5">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Langkah Pemasangan di Apple iOS (Safari):
+              </h4>
 
-              <div className="space-y-3 text-sm">
-                <div className="flex gap-3 items-start">
+              <div className="space-y-3 text-xs sm:text-sm">
+                <div className="flex gap-3 items-start p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">
                     1
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">Buka Pautan dalam Safari</p>
-                    <p className="text-xs text-slate-600 mt-0.5">Pastikan anda membuka laman ini dalam <strong>Safari</strong> di iPhone atau iPad anda (bukan di dalam in-app browser seperti WhatsApp/Facebook).</p>
+                    <p className="font-bold text-slate-900">Buka Pautan dalam Safari</p>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Di iPhone / iPad, anda mesti membuka pautan menggunakan pelayar <strong>Safari</strong> (bukan Chrome atau WhatsApp).
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 items-start">
+                <div className="flex gap-3 items-start p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">
                     2
                   </div>
                   <div>
-                    <div className="flex items-center gap-1.5 font-semibold text-slate-900">
+                    <div className="flex items-center gap-1.5 font-bold text-slate-900">
                       <span>Tekan Ikon Kongsi (Share)</span>
                       <Share2 className="w-4 h-4 text-blue-600 inline" />
                     </div>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      Di bar bawah Safari iPhone (atau bar atas iPad), tekan ikon petak segi empat dengan anak panah ke atas (Share).
+                      Tekan ikon petak dengan anak panah ke atas (Share) di bar alat bahagian bawah Safari iPhone anda.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 items-start">
+                <div className="flex gap-3 items-start p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">
                     3
                   </div>
                   <div>
-                    <div className="flex items-center gap-1.5 font-semibold text-slate-900">
-                      <span>Pilih 'Tambah ke Skrin Utama'</span>
+                    <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                      <span>Pilih "Tambah ke Skrin Utama"</span>
                       <PlusSquare className="w-4 h-4 text-blue-600 inline" />
                     </div>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      Skrol ke bawah pada senarai tindakan dan pilih <strong>"Tambah ke Skrin Utama"</strong> (Add to Home Screen).
+                      Skrol senarai tindakan ke bawah dan tekan <strong>"Tambah ke Skrin Utama" (Add to Home Screen)</strong>.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 items-start">
+                <div className="flex gap-3 items-start p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">
                     4
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">Tekan 'Tambah' (Add)</p>
+                    <p className="font-bold text-slate-900">Tekan "Tambah" (Add)</p>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      Tekan butang <strong>"Tambah"</strong> di sudut atas kanan. Aplikasi kini dipasang di skrin utama iPhone anda dan dibuka seperti aplikasi App Store sebenar!
+                      Tekan butang <strong>"Tambah"</strong> di sudut kanan atas skrin. Aplikasi kini terpasang di skrin utama iPhone anda!
                     </p>
                   </div>
                 </div>
@@ -184,23 +199,14 @@ export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab
 
           {/* Advantages Callout */}
           <div className="pt-2 border-t border-slate-200">
-            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Kelebihan Pemasangan di Telefon:</h4>
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Boleh guna Offline</span>
+                <span>Boleh guna Offline (Tiada Internet)</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Skrin Penuh (Tiada URL bar)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Simpan Draf Automatik</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Pantas & Ringan (~1MB)</span>
+                <span>Skrin Penuh macam App Native</span>
               </div>
             </div>
           </div>
@@ -210,9 +216,9 @@ export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab
         <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
           <button
             onClick={onClose}
-            className="w-full sm:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-semibold transition shadow"
+            className="w-full sm:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition"
           >
-            Faham, Tutup Panduan
+            Faham, Tutup
           </button>
         </div>
       </div>
