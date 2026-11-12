@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   ReportData, 
   ReportImage, 
-  INITIAL_REPORT_DATA, 
-  SAMPLE_PRESETS 
+  INITIAL_REPORT_DATA 
 } from './types';
 import { ReportForm } from './components/ReportForm';
 import { ReportPreview } from './components/ReportPreview';
@@ -11,33 +10,36 @@ import { ExportBar } from './components/ExportBar';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { InstallGuideModal } from './components/InstallGuideModal';
-import { ShareAppModal } from './components/ShareAppModal';
 import { usePWAInstall } from './usePWAInstall';
 import { 
   FileText, 
   Eye, 
   Smartphone, 
-  Apple, 
   Sparkles, 
   ZoomIn, 
   ZoomOut, 
   RotateCcw, 
-  Share2, 
-  Printer, 
   CheckCircle,
-  HelpCircle,
   Download
 } from 'lucide-react';
 
-const STORAGE_KEY_DATA = 'opr_report_data_v2';
-const STORAGE_KEY_IMAGES = 'opr_report_images_v2';
+const STORAGE_KEY_DATA = 'opr_report_data_clean_v1';
+const STORAGE_KEY_IMAGES = 'opr_report_images_clean_v1';
 
 const App: React.FC = () => {
-  // Initialize state with localStorage data or defaults
+  // Initialize state with localStorage data or defaults (all blank for user to type themselves)
   const [data, setData] = useState<ReportData>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_DATA);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...INITIAL_REPORT_DATA,
+          ...parsed,
+          disahkanOleh: 'ENCIK CHAI CHANG CHING',
+          jawatanDisahkan: 'Guru Besar SJK Chung Hua Bau',
+        };
+      }
     } catch (e) {
       console.warn('Could not read saved data', e);
     }
@@ -62,7 +64,6 @@ const App: React.FC = () => {
 
   // Guide modal state
   const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
   const { isInstallable, isStandalone, isIOS, install } = usePWAInstall();
 
   // Hidden / live report refs
@@ -110,6 +111,9 @@ const App: React.FC = () => {
       setData({
         ...INITIAL_REPORT_DATA,
         namaProgram: '',
+        disediakanOleh: '',
+        disahkanOleh: 'ENCIK CHAI CHANG CHING',
+        jawatanDisahkan: 'Guru Besar SJK Chung Hua Bau',
         objektif: '',
         aktiviti: '',
         kekuatan: '',
@@ -119,16 +123,6 @@ const App: React.FC = () => {
       setImages([]);
       localStorage.removeItem(STORAGE_KEY_DATA);
       localStorage.removeItem(STORAGE_KEY_IMAGES);
-    }
-  };
-
-  const handleApplyPreset = (idx: number) => {
-    const preset = SAMPLE_PRESETS[idx];
-    if (preset) {
-      setData(prev => ({
-        ...prev,
-        ...preset.data,
-      }));
     }
   };
 
@@ -164,16 +158,6 @@ const App: React.FC = () => {
 
           {/* Quick Header Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Share / Publish & QR Button */}
-            <button
-              onClick={() => setIsShareOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 shadow-sm transition"
-              title="Pautan rasmi, Kod QR dan perkongsian percuma"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>Kongsi / Kod QR</span>
-            </button>
-
             {/* Install Guide Button */}
             <button
               onClick={() => setIsGuideOpen(true)}
@@ -231,7 +215,6 @@ const App: React.FC = () => {
               images={images}
               setImages={setImages}
               onReset={handleReset}
-              onApplyPreset={handleApplyPreset}
             />
           </div>
 
@@ -314,28 +297,16 @@ const App: React.FC = () => {
         defaultTab={isIOS ? 'ios' : 'android'}
       />
 
-      <ShareAppModal
-        isOpen={isShareOpen}
-        onClose={() => setIsShareOpen(false)}
-      />
-
       {/* 7. Footer */}
       <footer className="mt-auto py-6 text-center text-xs text-slate-500 border-t border-slate-200 bg-white no-print">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p>&copy; 2026 SJK Chung Hua Bau. Sistem Pelaporan OPR Rasmi.</p>
           <div className="flex items-center gap-4 text-slate-500">
             <button 
-              onClick={() => setIsShareOpen(true)}
-              className="hover:text-emerald-600 transition flex items-center gap-1 font-semibold text-emerald-700"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>Terbit & Kongsi (Percuma)</span>
-            </button>
-            <button 
               onClick={() => setIsGuideOpen(true)}
-              className="hover:text-blue-600 transition flex items-center gap-1"
+              className="hover:text-blue-600 transition flex items-center gap-1 font-medium"
             >
-              <Smartphone className="w-3.5 h-3.5" />
+              <Smartphone className="w-3.5 h-3.5 text-blue-600" />
               <span>Panduan Pasang di Android & iOS</span>
             </button>
           </div>

@@ -2,7 +2,7 @@ import React, { ChangeEvent, useRef } from 'react';
 import { 
   ReportData, 
   ReportImage, 
-  SAMPLE_PRESETS 
+  SENARAI_STAF
 } from '../types';
 import { compressImage } from '../imageUtils';
 import { 
@@ -14,14 +14,12 @@ import {
   CheckCircle, 
   Upload, 
   Trash2, 
-  Sparkles, 
   Image as ImageIcon,
   RotateCcw,
   BookOpen,
   Camera,
   Layers,
-  Palette,
-  ShieldAlert
+  Palette
 } from 'lucide-react';
 
 interface Props {
@@ -30,7 +28,6 @@ interface Props {
   images: ReportImage[];
   setImages: React.Dispatch<React.SetStateAction<ReportImage[]>>;
   onReset: () => void;
-  onApplyPreset: (presetIndex: number) => void;
 }
 
 export const ReportForm: React.FC<Props> = ({
@@ -38,8 +35,7 @@ export const ReportForm: React.FC<Props> = ({
   setData,
   images,
   setImages,
-  onReset,
-  onApplyPreset
+  onReset
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -107,36 +103,6 @@ export const ReportForm: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      {/* Quick Preset Selector */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-              Muat Templat Contoh Pantas
-            </h3>
-          </div>
-          <span className="text-[11px] text-slate-500">Klik untuk isi borang automatik</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {SAMPLE_PRESETS.map((preset, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => onApplyPreset(idx)}
-              className="p-2.5 text-left rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/60 active:scale-98 transition group flex flex-col justify-between"
-            >
-              <div className="font-semibold text-xs text-slate-800 group-hover:text-blue-700 leading-tight">
-                {preset.title}
-              </div>
-              <span className="text-[10px] text-slate-500 mt-1 line-clamp-1">
-                {preset.subtitle}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Main Form Fields */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Form Title & Style Customizer */}
@@ -548,17 +514,35 @@ export const ReportForm: React.FC<Props> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <span className="text-xs font-bold text-slate-600 uppercase">Disediakan Oleh</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-600 uppercase">Disediakan Oleh</span>
+                  <span className="text-[10px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                    Pilih Dari Senarai Staf
+                  </span>
+                </div>
+
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-500 mb-0.5">Nama Pegawai / Guru</label>
-                  <input
+                  <label className="block text-[11px] font-medium text-slate-500 mb-0.5">
+                    Nama Pegawai / Guru (Pilih dari Dropdown)
+                  </label>
+                  <select
                     name="disediakanOleh"
                     value={data.disediakanOleh}
                     onChange={handleInputChange}
-                    className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg outline-none bg-white font-medium"
-                    placeholder="Nama Guru Penyelaras"
-                  />
+                    className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-lg outline-none bg-white font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer shadow-sm"
+                  >
+                    <option value="">-- Sila Pilih Nama Pegawai / Guru --</option>
+                    {SENARAI_STAF.map((staf, idx) => (
+                      <option key={idx} value={staf}>
+                        {idx + 1}. {staf}
+                      </option>
+                    ))}
+                    {data.disediakanOleh && !SENARAI_STAF.includes(data.disediakanOleh) && (
+                      <option value={data.disediakanOleh}>{data.disediakanOleh} (Pilihan Khas)</option>
+                    )}
+                  </select>
                 </div>
+
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 mb-0.5">Jawatan</label>
                   <input
@@ -566,21 +550,26 @@ export const ReportForm: React.FC<Props> = ({
                     value={data.jawatanDisediakan}
                     onChange={handleInputChange}
                     className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg outline-none bg-white"
-                    placeholder="Contoh: Setiausaha Sukan / Penyelaras"
+                    placeholder="Contoh: Penyelaras Program / Setiausaha Sukan"
                   />
                 </div>
               </div>
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <span className="text-xs font-bold text-slate-600 uppercase">Disahkan Oleh</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-600 uppercase">Disahkan Oleh</span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded border border-emerald-300">
+                    Pentadbir Sekolah
+                  </span>
+                </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 mb-0.5">Nama Pentadbir</label>
                   <input
                     name="disahkanOleh"
                     value={data.disahkanOleh}
                     onChange={handleInputChange}
-                    className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg outline-none bg-white font-medium"
-                    placeholder="Nama Guru Besar / PK"
+                    className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-lg outline-none bg-slate-100 font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                    placeholder="ENCIK CHAI CHANG CHING"
                   />
                 </div>
                 <div>
@@ -590,7 +579,7 @@ export const ReportForm: React.FC<Props> = ({
                     value={data.jawatanDisahkan}
                     onChange={handleInputChange}
                     className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg outline-none bg-white"
-                    placeholder="Contoh: Guru Besar SJK Chung Hua Bau"
+                    placeholder="Guru Besar SJK Chung Hua Bau"
                   />
                 </div>
               </div>
