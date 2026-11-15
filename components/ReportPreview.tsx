@@ -91,8 +91,9 @@ export const ReportPreview = forwardRef<HTMLDivElement, Props>(({ data, images, 
         <div className={`flex items-center gap-4 pb-2.5 mb-2 border-b-2 ${theme.lineBorder}`}>
           {data.logoSekolah ? (
             <img
-              src={data.logoSekolah}
+              src={data.logoSekolah || '/logo-sekolah.png'}
               alt="School Logo"
+              crossOrigin="anonymous"
               className="w-16 h-16 object-contain flex-shrink-0"
             />
           ) : (
@@ -260,6 +261,7 @@ export const ReportPreview = forwardRef<HTMLDivElement, Props>(({ data, images, 
                       <img
                         src={img.url}
                         alt={`Aktiviti ${slotIdx + 1}`}
+                        crossOrigin="anonymous"
                         className="w-full h-full object-cover"
                       />
                     ) : (

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Download, Smartphone, Apple, HelpCircle, Check, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Download, Smartphone, HelpCircle, Check, AlertTriangle, ExternalLink, Copy } from 'lucide-react';
 import { usePWAInstall } from '../usePWAInstall';
 import { InstallGuideModal } from './InstallGuideModal';
 
 export const PWAInstallBanner: React.FC = () => {
-  const { isInstallable, isInstalled, isStandalone, isIOS, isAndroid, isInAppBrowser, install } = usePWAInstall();
+  const { isInstallable, isInstalled, isStandalone, isIOS, isInAppBrowser, isInIframe, install } = usePWAInstall();
   const [showGuide, setShowGuide] = useState(false);
   const [guideTab, setGuideTab] = useState<'ios' | 'android'>(isIOS ? 'ios' : 'android');
   const [installSuccess, setInstallSuccess] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
   // If already installed and opened in standalone mode, do not show banner
   if (isStandalone || isInstalled) {
@@ -23,9 +24,19 @@ export const PWAInstallBanner: React.FC = () => {
         return;
       }
     }
-    // If not installable or iOS or prompt didn't fire yet, open the illustrated guide
+    // Fallback: open illustrated installation guide
     setGuideTab(isIOS ? 'ios' : 'android');
     setShowGuide(true);
+  };
+
+  const handleCopyAppUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 3000);
+    } catch (err) {
+      console.warn('Copy URL failed:', err);
+    }
   };
 
   return (
@@ -51,20 +62,31 @@ export const PWAInstallBanner: React.FC = () => {
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-center">
             {installSuccess ? (
               <div className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-md">
                 <Check className="w-4 h-4" />
                 <span>Aplikasi Berjaya Dipasang!</span>
               </div>
+            ) : isInIframe ? (
+              <a
+                href={typeof window !== 'undefined' ? window.location.href : '/'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black px-4 py-2 rounded-xl text-xs sm:text-sm shadow-lg transition-all"
+                title="Buka di tab penuh Chrome/Safari untuk memasang aplikasi"
+              >
+                <ExternalLink className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                <span>Buka Tab Penuh Untuk Pasang</span>
+              </a>
             ) : (
               <button
                 onClick={handleInstallClick}
-                className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black px-4 py-2 rounded-xl text-xs sm:text-sm shadow-lg transition-all animate-pulse"
+                className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black px-4 py-2 rounded-xl text-xs sm:text-sm shadow-lg transition-all"
                 title="Tekan untuk pasang ke telefon anda"
               >
                 <Download className="w-4 h-4 text-slate-950 stroke-[2.5]" />
-                <span>{isIOS ? 'Pasang di iPhone / iPad' : 'Pasang di Telefon (Android)'}</span>
+                <span>{isIOS ? 'Pasang di iPhone / iPad' : isInstallable ? 'Pasang Aplikasi Sekarang' : 'Pasang di Telefon'}</span>
               </button>
             )}
 
@@ -82,8 +104,27 @@ export const PWAInstallBanner: React.FC = () => {
           </div>
         </div>
 
+        {/* Iframe notice */}
+        {isInIframe && (
+          <div className="bg-amber-500/95 text-slate-950 px-4 py-2 text-xs font-semibold flex flex-col sm:flex-row items-center justify-center gap-2 text-center border-t border-amber-400">
+            <div className="flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 text-slate-950" />
+              <span>
+                Anda sedang melihat aplikasi dalam bingkai pratonton. Buka pautan dalam tab penuh <strong>Chrome (Android)</strong> atau <strong>Safari (iPhone)</strong> untuk memasang.
+              </span>
+            </div>
+            <button
+              onClick={handleCopyAppUrl}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-bold hover:bg-slate-800 transition flex-shrink-0"
+            >
+              {copiedUrl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+              <span>{copiedUrl ? 'Pautan Disalin!' : 'Salin Pautan App'}</span>
+            </button>
+          </div>
+        )}
+
         {/* WhatsApp / In-App browser alert if detected */}
-        {isInAppBrowser && (
+        {!isInIframe && isInAppBrowser && (
           <div className="bg-amber-500 text-slate-950 px-4 py-2 text-xs font-bold flex items-center justify-center gap-2 text-center border-t border-amber-400">
             <AlertTriangle className="w-4 h-4 flex-shrink-0 text-slate-950" />
             <span>

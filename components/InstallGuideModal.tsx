@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Smartphone, Apple, CheckCircle2, X, Share2, PlusSquare, AlertTriangle, Sparkles } from 'lucide-react';
+import { Smartphone, Apple, CheckCircle2, X, Share2, PlusSquare, AlertTriangle, ExternalLink, Copy, Check } from 'lucide-react';
+import { usePWAInstall } from '../usePWAInstall';
 
 interface Props {
   isOpen: boolean;
@@ -9,8 +10,20 @@ interface Props {
 
 export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab = 'android' }) => {
   const [activeTab, setActiveTab] = useState<'ios' | 'android'>(defaultTab);
+  const { isInstallable, isInIframe, install } = usePWAInstall();
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 3000);
+    } catch (e) {
+      console.warn('Copy failed', e);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -66,6 +79,53 @@ export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab
 
         {/* Content area */}
         <div className="p-5 overflow-y-auto space-y-4">
+          {/* Direct Install Action if browser prompt is ready */}
+          {isInstallable && (
+            <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3">
+              <div className="text-xs text-emerald-950">
+                <p className="font-bold">Peranti Anda Sedia Memasang!</p>
+                <p className="text-emerald-800 mt-0.5">Tekan butang di sebelah untuk pasang terus ke skrin utama.</p>
+              </div>
+              <button
+                onClick={async () => {
+                  const ok = await install();
+                  if (ok) onClose();
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex-shrink-0"
+              >
+                Pasang Sekarang
+              </button>
+            </div>
+          )}
+
+          {/* Iframe Notice */}
+          {isInIframe && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-950 space-y-2">
+              <p className="font-bold">Buka Pautan di Luar Pratonton Dahulu:</p>
+              <p className="leading-relaxed">
+                Pelayar tidak membenarkan pemasangan aplikasi dari dalam tetingkap pratonton. Sila buka pautan aplikasi secara terus dalam <strong>Google Chrome</strong> atau <strong>Safari</strong>.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href={typeof window !== 'undefined' ? window.location.href : '/'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Buka Tab Penuh</span>
+                </a>
+                <button
+                  onClick={handleCopyUrl}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-300 text-blue-800 rounded-lg font-bold text-xs hover:bg-blue-100"
+                >
+                  {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedUrl ? 'Disalin!' : 'Salin Pautan'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Important WhatsApp / Social Browser Notice */}
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -113,7 +173,7 @@ export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab
                     3
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900">Pilih "Pasang Aplikasi" (Install App)</p>
+                    <p className="font-bold text-slate-900">Pilih "Pasang Aplikasi" (Install App) atau "Tambah ke Skrin Utama"</p>
                     <p className="text-xs text-slate-600 mt-0.5">
                       Skrol dan tekan pilihan <strong>"Pasang aplikasi" (Install app)</strong> atau <strong>"Tambah ke skrin Utama" (Add to Home screen)</strong>.
                     </p>
@@ -127,7 +187,7 @@ export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab
                   <div>
                     <p className="font-bold text-slate-900">Tekan "Pasang" (Install)</p>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      Sahkan dengan menekan butang <strong>"Pasang"</strong>. Aplikasi OPR 2026 akan terus muncul di skrin telefon anda seperti aplikasi Play Store!
+                      Sahkan dengan menekan butang <strong>"Pasang"</strong>. Aplikasi OPR 2026 akan terus muncul di skrin telefon anda!
                     </p>
                   </div>
                 </div>

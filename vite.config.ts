@@ -15,12 +15,21 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon.svg'],
+        useCredentials: true,
+        includeAssets: [
+          'favicon.png',
+          'apple-touch-icon.png',
+          'icon.svg',
+          'logo-sekolah.png',
+          'pwa-192x192.png',
+          'pwa-512x512.png',
+          'pwa-maskable-512x512.png',
+        ],
         manifest: {
           id: '/',
           name: 'Penjana Laporan OPR 2026',
           short_name: 'OPR 2026',
-          description: 'Sistem Penjana Laporan Satu Muka Surat (OPR) Sekolah Rendah & Menengah SJK Chung Hua Bau',
+          description: 'Sistem Penjana Laporan Satu Muka Surat (OPR) Sekolah SJK Chung Hua Bau',
           theme_color: '#1e3a8a',
           background_color: '#f8fafc',
           display: 'standalone',
@@ -51,6 +60,7 @@ export default defineConfig(() => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          navigateFallback: '/index.html',
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -80,25 +90,12 @@ export default defineConfig(() => {
                 },
               },
             },
-            {
-              urlPattern: /^https:\/\/i\.postimg\.cc\/.*/i,
-              handler: 'StaleWhileRevalidate',
-              options: {
-                cacheName: 'school-assets-cache',
-                expiration: {
-                  maxEntries: 20,
-                  maxAgeSeconds: 60 * 60 * 24 * 30,
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
           ],
         },
         devOptions: {
           enabled: true,
-          type: 'module',
+          type: 'classic',
+          navigateFallback: '/index.html',
         },
       }),
     ],

@@ -69,7 +69,7 @@ export const INITIAL_REPORT_DATA: ReportData = {
   namaSekolah: 'SJK CHUNG HUA BAU',
   kodSekolah: 'YBC1303',
   alamatSekolah: 'Sekolah Jenis Kebangsaan Chung Hua Bau, 94000 Bau, Sarawak',
-  logoSekolah: 'https://i.postimg.cc/x8kSSswX/7bau25-removebg-preview-(1).png',
+  logoSekolah: '/logo-sekolah.png',
   tahun: '2026',
   namaProgram: '',
   anjuran: '',

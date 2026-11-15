@@ -11,9 +11,17 @@ export function usePWAInstall() {
   const [isIOS, setIsIOS] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [isInIframe, setIsInIframe] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    // Check if running inside an iframe (e.g. AI Studio preview pane blocks PWA install)
+    try {
+      setIsInIframe(window.self !== window.top);
+    } catch {
+      setIsInIframe(true);
+    }
+
     // Check if running in standalone mode (already installed as PWA)
     const checkStandalone = () => {
       const isMediaStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -77,6 +85,7 @@ export function usePWAInstall() {
     isIOS,
     isAndroid,
     isInAppBrowser,
+    isInIframe,
     install,
   };
 }

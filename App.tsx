@@ -68,6 +68,7 @@ const App: React.FC = () => {
 
   // Hidden / live report refs
   const reportRef = useRef<HTMLDivElement>(null);
+  const pdfRenderRef = useRef<HTMLDivElement>(null);
 
   // Save to LocalStorage whenever data or images change
   useEffect(() => {
@@ -201,7 +202,7 @@ const App: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-6">
         {/* Export action bar */}
         <ExportBar
-          reportRef={reportRef}
+          reportRef={pdfRenderRef}
           programName={data.namaProgram}
         />
 
@@ -278,7 +279,31 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* 4. Print-Only Container (Active strictly during window.print()) */}
+      {/* 4. Dedicated Offscreen Container for 100% Reliable PDF Generation (Always Active on Mobile & Desktop) */}
+      <div 
+        style={{
+          position: 'fixed',
+          left: '-10000px',
+          top: 0,
+          width: '210mm',
+          height: '297mm',
+          overflow: 'visible',
+          zIndex: -9999,
+          pointerEvents: 'none',
+          visibility: 'visible',
+          opacity: 1,
+        }}
+        aria-hidden="true"
+      >
+        <ReportPreview
+          ref={pdfRenderRef}
+          data={data}
+          images={images}
+          isPrintOnly={false}
+        />
+      </div>
+
+      {/* 5. Print-Only Container (Active strictly during window.print()) */}
       <div className="hidden print:block print-only-container">
         <ReportPreview
           data={data}
