@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Download, ExternalLink, Loader2, CheckCircle2, HardDrive, ArrowUpRight, Copy, Check, X, FolderUp } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Download, ExternalLink, Loader2, CheckCircle2, HardDrive, ArrowUpRight, Copy, Check, X, CloudUpload } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { sanitizeDocumentColorsForHtml2Canvas } from '../pdfColorSanitizer';
 
 interface Props {
   reportRef: React.RefObject<HTMLDivElement | null>;
@@ -10,14 +11,18 @@ interface Props {
 
 const GOOGLE_DRIVE_FOLDER_ID = '1vZlSBepCVUMdccjUgTw9v1I5DzFyK1Dq';
 const GOOGLE_DRIVE_FOLDER_URL = `https://drive.google.com/drive/folders/${GOOGLE_DRIVE_FOLDER_ID}?lfhs=2`;
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmrT4tVt-avRGWsYqRP_Wfoen3oeFq51tq-FihyAL3_99QKufEpk4R4EZanfNSzwI/exec';
 
 export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isDriveActionActive, setIsDriveActionActive] = useState(false);
+  const [driveStepText, setDriveStepText] = useState('Menghantar ke Google Drive...');
   const [showDriveModal, setShowDriveModal] = useState(false);
   const [generatedFileName, setGeneratedFileName] = useState('');
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const lastGeneratedPdfRef = useRef<{ pdf: jsPDF; fileName: string } | null>(null);
 
   const getCleanFileName = (ext: string) => {
     const safeTitle = (programName || 'Laporan_OPR')
@@ -55,13 +60,15 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
       allowTaint: true,
       logging: false,
       backgroundColor: '#ffffff',
-      onclone: (clonedDoc) => {
-        const clonedTarget = clonedDoc.getElementById('report-paper-a4');
-        if (clonedTarget) {
-          clonedTarget.style.display = 'flex';
-          clonedTarget.style.visibility = 'visible';
-          clonedTarget.style.opacity = '1';
+      onclone: (clonedDoc, clonedElement) => {
+        const target = clonedElement || clonedDoc.getElementById('report-paper-a4');
+        if (target) {
+          target.style.display = 'flex';
+          target.style.visibility = 'visible';
+          target.style.opacity = '1';
+          target.style.boxShadow = 'none';
         }
+        sanitizeDocumentColorsForHtml2Canvas(clonedDoc, target);
       },
     });
 
@@ -92,6 +99,7 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
 
     try {
       const { pdf, fileName } = await generatePDFBlob();
+      lastGeneratedPdfRef.current = { pdf, fileName };
       pdf.save(fileName);
       setGeneratedFileName(fileName);
     } catch (err: any) {
@@ -104,38 +112,95 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
     }
   };
 
-  // 2. Generate PDF and open Google Drive folder
+  // 2. Generate PDF and automatically upload/save into Google Drive via Google Apps Script
   const handleSendToGoogleDrive = async () => {
     setIsDriveActionActive(true);
+    setDriveStepText('Sedang Menjana PDF...');
     setErrorMessage(null);
-
-    // Open the Google Drive folder synchronously on user tap/click to prevent popup blocker blocking it
-    const driveWindow = window.open(GOOGLE_DRIVE_FOLDER_URL, '_blank');
+    setUploadedFileUrl(null);
 
     try {
       const { pdf, fileName } = await generatePDFBlob();
-      
-      // Save the PDF file to user's device
-      pdf.save(fileName);
+      lastGeneratedPdfRef.current = { pdf, fileName };
       setGeneratedFileName(fileName);
 
-      // If the window popup was blocked or closed, set location
-      if (driveWindow && !driveWindow.closed) {
-        driveWindow.focus();
+      setDriveStepText('Menyimpan ke Google Drive...');
+
+      const dataUri = pdf.output('datauristring');
+      const base64 = dataUri.includes(',') ? dataUri.split(',')[1] : dataUri;
+
+      const payload = JSON.stringify({
+        base64,
+        fileName,
+        folderId: GOOGLE_DRIVE_FOLDER_ID,
+        mimeType: 'application/pdf',
+      });
+
+      let fileViewUrl: string | null = null;
+
+      try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: payload,
+          redirect: 'follow',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Pelayan Google Drive memulangkan ralat HTTP ${response.status}.`);
+        }
+
+        const responseText = await response.text();
+        if (responseText.trim().startsWith('<')) {
+          throw new Error(
+            'Google Apps Script tidak dapat diakses secara terus. Pastikan tetapan Deploy Web App diset kepada "Anyone" (Siapa sahaja).'
+          );
+        }
+
+        try {
+          const parsed = JSON.parse(responseText);
+          if (parsed && parsed.ok === false) {
+            throw new Error(parsed.error || 'Gagal menyimpan fail ke folder Google Drive.');
+          }
+          if (parsed && parsed.id) {
+            fileViewUrl = `https://drive.google.com/file/d/${parsed.id}/view`;
+          }
+        } catch (jsonErr: any) {
+          if (jsonErr instanceof SyntaxError) {
+            // Non-JSON plain success text from custom script
+          } else {
+            throw jsonErr;
+          }
+        }
+      } catch (fetchErr: any) {
+        // Fallback for environments where cross-origin redirect headers are blocked (e.g. file:// offline HTML)
+        if (fetchErr instanceof TypeError) {
+          await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: payload,
+          });
+        } else {
+          throw fetchErr;
+        }
       }
 
-      // Show the guide modal for confirming upload into the Google Drive folder
+      setUploadedFileUrl(fileViewUrl);
       setShowDriveModal(true);
     } catch (err: any) {
-      console.error('Google Drive Action Error:', err);
+      console.error('Google Drive Upload Error:', err);
       setErrorMessage(
-        'Gagal menjana fail PDF: ' + (err?.message || 'Sila cuba lagi.')
+        'Gagal menghantar ke Google Drive: ' + (err?.message || 'Sila semak sambungan internet dan cuba lagi.')
       );
-      if (driveWindow && !driveWindow.closed) {
-        driveWindow.focus();
-      }
     } finally {
       setIsDriveActionActive(false);
+    }
+  };
+
+  const handleSaveLocalCopy = () => {
+    if (lastGeneratedPdfRef.current) {
+      lastGeneratedPdfRef.current.pdf.save(lastGeneratedPdfRef.current.fileName);
     }
   };
 
@@ -158,7 +223,7 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
               Google Drive Sekolah
             </span>
             <p className="text-xs text-slate-500 mt-1">
-              Jana fail PDF dan simpan ke dalam folder Google Drive SJK Chung Hua Bau
+              Jana fail PDF dan simpan secara automatik ke dalam folder Google Drive SJK Chung Hua Bau
             </p>
           </div>
 
@@ -168,16 +233,16 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
               onClick={handleSendToGoogleDrive}
               disabled={isDriveActionActive || isGeneratingPdf}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition disabled:opacity-50"
-              title="Jana fail PDF dan buka folder Google Drive untuk disimpan"
+              title="Jana fail PDF dan simpan terus ke dalam folder Google Drive"
             >
               {isDriveActionActive ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
-                  <span>Sedang Menjana PDF...</span>
+                  <span>{driveStepText}</span>
                 </>
               ) : (
                 <>
-                  <HardDrive className="w-4 h-4 text-emerald-200" />
+                  <CloudUpload className="w-4 h-4 text-emerald-100" />
                   <span>Hantar & Simpan ke Google Drive</span>
                   <ArrowUpRight className="w-3.5 h-3.5 opacity-80" />
                 </>
@@ -210,7 +275,7 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition"
-              title="Buka terus folder Google Drive di tab baharu"
+              title="Buka folder Google Drive di tab baharu"
             >
               <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
               <span className="hidden sm:inline">Buka Folder Drive</span>
@@ -224,16 +289,15 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
             <span>{errorMessage}</span>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-rose-600 font-bold hover:underline"
+              className="text-rose-600 font-bold hover:underline flex-shrink-0"
             >
               Tutup
             </button>
           </div>
         )}
-
       </div>
 
-      {/* Google Drive Upload Guide Modal */}
+      {/* Google Drive Upload Success Modal */}
       {showDriveModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div 
@@ -244,11 +308,11 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
             <div className="bg-gradient-to-r from-emerald-800 via-teal-900 to-emerald-900 text-white p-5 flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
-                  <FolderUp className="w-6 h-6 text-emerald-300" />
+                  <CheckCircle2 className="w-6 h-6 text-emerald-300" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg leading-tight">Fail PDF Berjaya Dijana!</h3>
-                  <p className="text-xs text-emerald-200 mt-0.5">Sedia untuk disimpan ke Google Drive</p>
+                  <h3 className="font-bold text-lg leading-tight">Berjaya Disimpan ke Google Drive!</h3>
+                  <p className="text-xs text-emerald-200 mt-0.5">Laporan PDF telah dihantar secara automatik</p>
                 </div>
               </div>
               <button 
@@ -266,52 +330,46 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                 <div>
                   <p className="font-bold text-xs sm:text-sm text-emerald-900">
-                    Fail PDF telah disimpan ke peranti anda:
+                    Fail PDF telah berjaya dimuat naik ke Folder Google Drive Sekolah:
                   </p>
-                  <p className="text-xs font-mono font-semibold text-emerald-800 mt-0.5">
+                  <p className="text-xs font-mono font-semibold text-emerald-800 mt-0.5 break-all">
                     {generatedFileName}
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <h4 className="font-bold text-slate-800 uppercase tracking-wider text-xs">
-                  Langkah Menyimpan ke Google Drive Sekolah:
-                </h4>
+              <div className="flex flex-wrap gap-2.5">
+                {uploadedFileUrl && (
+                  <a
+                    href={uploadedFileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Lihat Fail PDF</span>
+                  </a>
+                )}
 
-                <div className="flex gap-3 items-start p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                  <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                    1
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-900">Buka Folder Google Drive Sekolah</p>
-                    <p className="text-slate-600 mt-0.5">
-                      Folder telah dibuka di tab pelayar anda. Jika belum terbuka, tekan butang di bawah:
-                    </p>
-                    <a
-                      href={GOOGLE_DRIVE_FOLDER_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 mt-2 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition"
-                    >
-                      <HardDrive className="w-3.5 h-3.5" />
-                      <span>Buka Folder Google Drive Sekarang</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                </div>
+                <a
+                  href={GOOGLE_DRIVE_FOLDER_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs shadow-sm transition"
+                >
+                  <HardDrive className="w-4 h-4" />
+                  <span>Buka Folder Google Drive</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </a>
 
-                <div className="flex gap-3 items-start p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                  <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                    2
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-900">Muat Naik Fail PDF Tersebut</p>
-                    <p className="text-slate-600 mt-0.5">
-                      Di dalam Google Drive, tekan butang <strong>"+ New"</strong> atau <strong>"+"</strong> dan pilih <strong>"File upload"</strong> (atau seret fail <code>{generatedFileName}</code> yang baru dimuat turun ke dalam folder tersebut).
-                    </p>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveLocalCopy}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-xl font-bold text-xs transition"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Muat Turun Salinan PDF</span>
+                </button>
               </div>
 
               <div className="pt-2 border-t border-slate-200 flex items-center justify-end text-xs text-slate-500">
