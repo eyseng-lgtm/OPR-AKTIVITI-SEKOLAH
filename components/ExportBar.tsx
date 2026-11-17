@@ -3,17 +3,19 @@ import { Download, ExternalLink, Loader2, CheckCircle2, HardDrive, ArrowUpRight,
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { sanitizeDocumentColorsForHtml2Canvas } from '../pdfColorSanitizer';
+import { ReportData } from '../types';
 
 interface Props {
   reportRef: React.RefObject<HTMLDivElement | null>;
   programName: string;
+  reportData: ReportData;
 }
 
 const GOOGLE_DRIVE_FOLDER_ID = '1vZlSBepCVUMdccjUgTw9v1I5DzFyK1Dq';
 const GOOGLE_DRIVE_FOLDER_URL = `https://drive.google.com/drive/folders/${GOOGLE_DRIVE_FOLDER_ID}?lfhs=2`;
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmrT4tVt-avRGWsYqRP_Wfoen3oeFq51tq-FihyAL3_99QKufEpk4R4EZanfNSzwI/exec';
 
-export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
+export const ExportBar: React.FC<Props> = ({ reportRef, programName, reportData }) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isDriveActionActive, setIsDriveActionActive] = useState(false);
   const [driveStepText, setDriveStepText] = useState('Menghantar ke Google Drive...');
@@ -127,13 +129,33 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
       setDriveStepText('Menyimpan ke Google Drive...');
 
       const dataUri = pdf.output('datauristring');
-      const base64 = dataUri.includes(',') ? dataUri.split(',')[1] : dataUri;
+      const pdfBase64 = dataUri.includes(',')
+        ? dataUri.slice(dataUri.indexOf(',') + 1)
+        : dataUri;
 
+      const safeProgramTitle = (reportData.namaProgram || 'Laporan_OPR')
+        .replace(/[\\/:*?"<>|]/g, '_')
+        .trim() || 'Laporan_OPR';
+
+      const weaknessesText = reportData.penambahbaikan
+        ? `${reportData.kelemahan || '-'}\nCadangan Penambahbaikan: ${reportData.penambahbaikan}`
+        : (reportData.kelemahan || '-');
+
+      // Exact payload schema expected by the user's Google Apps Script doPost(e)
       const payload = JSON.stringify({
-        base64,
-        fileName,
-        folderId: GOOGLE_DRIVE_FOLDER_ID,
-        mimeType: 'application/pdf',
+        timestamp: new Date().toLocaleString('ms-MY'),
+        programName: safeProgramTitle,
+        organizedBy: reportData.anjuran || '-',
+        date: reportData.tarikh || '-',
+        time: reportData.masa || '-',
+        venue: reportData.tempat || '-',
+        target: reportData.sasaran || '-',
+        studentCount: reportData.bilanganMurid || '-',
+        objectives: reportData.objektif || '-',
+        activities: reportData.aktiviti || '-',
+        strengths: reportData.kekuatan || '-',
+        weaknesses: weaknessesText,
+        pdfData: pdfBase64,
       });
 
       let fileViewUrl: string | null = null;
@@ -159,15 +181,23 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
 
         try {
           const parsed = JSON.parse(responseText);
+          if (parsed && parsed.status === 'error') {
+            throw new Error(parsed.message || 'Gagal menyimpan fail ke folder Google Drive.');
+          }
           if (parsed && parsed.ok === false) {
             throw new Error(parsed.error || 'Gagal menyimpan fail ke folder Google Drive.');
           }
-          if (parsed && parsed.id) {
+          if (parsed && parsed.url === 'Tiada PDF') {
+            throw new Error('Data PDF tidak diterima oleh Google Apps Script.');
+          }
+          if (parsed && parsed.url && parsed.url !== 'Tiada PDF') {
+            fileViewUrl = parsed.url;
+          } else if (parsed && parsed.id) {
             fileViewUrl = `https://drive.google.com/file/d/${parsed.id}/view`;
           }
         } catch (jsonErr: any) {
           if (jsonErr instanceof SyntaxError) {
-            // Non-JSON plain success text from custom script
+            // Non-JSON plain success text from script
           } else {
             throw jsonErr;
           }

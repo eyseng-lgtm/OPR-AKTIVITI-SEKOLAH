@@ -218,6 +218,7 @@ const App: React.FC = () => {
         <ExportBar
           reportRef={pdfRenderRef}
           programName={data.namaProgram}
+          reportData={data}
         />
 
         {/* Desktop Split View / Mobile Tab View */}
