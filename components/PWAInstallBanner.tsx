@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { Download, Smartphone, HelpCircle, Check, AlertTriangle, ExternalLink, Copy } from 'lucide-react';
+import { Download, Smartphone, HelpCircle, Check, AlertTriangle, ExternalLink, Copy, FileCode } from 'lucide-react';
 import { usePWAInstall } from '../usePWAInstall';
 import { InstallGuideModal } from './InstallGuideModal';
 
 export const PWAInstallBanner: React.FC = () => {
-  const { isInstallable, isInstalled, isStandalone, isIOS, isInAppBrowser, isInIframe, install } = usePWAInstall();
+  const { isInstallable, isInstalled, isStandalone, isStandaloneFile, isIOS, isInAppBrowser, isInIframe, install } = usePWAInstall();
   const [showGuide, setShowGuide] = useState(false);
   const [guideTab, setGuideTab] = useState<'ios' | 'android'>(isIOS ? 'ios' : 'android');
   const [installSuccess, setInstallSuccess] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
-  // If already installed and opened in standalone mode, do not show banner
-  if (isStandalone || isInstalled) {
+  // If already installed, running in standalone mode, or opened from downloaded HTML file, hide banner
+  if (isStandalone || isInstalled || isStandaloneFile) {
     return null;
   }
 
@@ -89,6 +89,16 @@ export const PWAInstallBanner: React.FC = () => {
                 <span>{isIOS ? 'Pasang di iPhone / iPad' : isInstallable ? 'Pasang Aplikasi Sekarang' : 'Pasang di Telefon'}</span>
               </button>
             )}
+
+            <a
+              href="/OPR-2026-SJK-Chung-Hua-Bau.html"
+              download="OPR-2026-SJK-Chung-Hua-Bau.html"
+              className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold px-3 py-2 rounded-xl text-xs transition border border-blue-400/40 shadow"
+              title="Muat turun fail HTML tunggal untuk guna secara offline"
+            >
+              <FileCode className="w-4 h-4 text-blue-100" />
+              <span>Muat Turun HTML</span>
+            </a>
 
             <button
               onClick={() => {

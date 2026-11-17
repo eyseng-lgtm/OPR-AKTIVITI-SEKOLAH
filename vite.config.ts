@@ -10,21 +10,22 @@ export default defineConfig(() => {
       port: 3000,
       host: '0.0.0.0',
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'pdf-vendor': ['jspdf', 'html2canvas'],
+            'react-vendor': ['react', 'react-dom', 'lucide-react'],
+          },
+        },
+      },
+    },
     plugins: [
       react(),
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
         useCredentials: true,
-        includeAssets: [
-          'favicon.png',
-          'apple-touch-icon.png',
-          'icon.svg',
-          'logo-sekolah.png',
-          'pwa-192x192.png',
-          'pwa-512x512.png',
-          'pwa-maskable-512x512.png',
-        ],
         manifest: {
           id: '/',
           name: 'Penjana Laporan OPR 2026',
@@ -34,6 +35,7 @@ export default defineConfig(() => {
           background_color: '#f8fafc',
           display: 'standalone',
           orientation: 'portrait-primary',
+          lang: 'ms',
           start_url: '/',
           scope: '/',
           categories: ['education', 'productivity'],
@@ -60,7 +62,11 @@ export default defineConfig(() => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          globIgnores: ['**/OPR-2026-SJK-Chung-Hua-Bau.html'],
           navigateFallback: '/index.html',
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

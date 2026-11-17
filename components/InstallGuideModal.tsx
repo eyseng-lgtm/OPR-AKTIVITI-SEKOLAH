@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Smartphone, Apple, CheckCircle2, X, Share2, PlusSquare, AlertTriangle, ExternalLink, Copy, Check } from 'lucide-react';
 import { usePWAInstall } from '../usePWAInstall';
 
@@ -12,6 +12,12 @@ export const InstallGuideModal: React.FC<Props> = ({ isOpen, onClose, defaultTab
   const [activeTab, setActiveTab] = useState<'ios' | 'android'>(defaultTab);
   const { isInstallable, isInIframe, install } = usePWAInstall();
   const [copiedUrl, setCopiedUrl] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(defaultTab);
+    }
+  }, [isOpen, defaultTab]);
 
   if (!isOpen) return null;
 

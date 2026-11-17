@@ -20,7 +20,8 @@ import {
   ZoomOut, 
   RotateCcw, 
   CheckCircle,
-  Download
+  Download,
+  FileCode
 } from 'lucide-react';
 
 const STORAGE_KEY_DATA = 'opr_report_data_clean_v1';
@@ -64,7 +65,7 @@ const App: React.FC = () => {
 
   // Guide modal state
   const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const { isInstallable, isStandalone, isIOS, install } = usePWAInstall();
+  const { isIOS, isStandaloneFile } = usePWAInstall();
 
   // Hidden / live report refs
   const reportRef = useRef<HTMLDivElement>(null);
@@ -138,7 +139,7 @@ const App: React.FC = () => {
           {/* Logo & School Title */}
           <div className="flex items-center gap-3">
             <img
-              src={data.logoSekolah || 'https://i.postimg.cc/x8kSSswX/7bau25-removebg-preview-(1).png'}
+              src={data.logoSekolah || '/logo-sekolah.png'}
               alt="School Logo"
               className="w-10 h-10 sm:w-11 sm:h-11 object-contain drop-shadow-sm flex-shrink-0"
             />
@@ -159,15 +160,28 @@ const App: React.FC = () => {
 
           {/* Quick Header Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Install Guide Button */}
-            <button
-              onClick={() => setIsGuideOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-blue-900 hover:bg-slate-100 border border-slate-200 transition"
-              title="Panduan pemasangan Android dan iOS"
-            >
-              <Smartphone className="w-3.5 h-3.5 text-blue-600" />
-              <span className="hidden md:inline">Pasang di Telefon</span>
-            </button>
+            {/* Install Guide & HTML Download */}
+            {!isStandaloneFile && (
+              <>
+                <a
+                  href="/OPR-2026-SJK-Chung-Hua-Bau.html"
+                  download="OPR-2026-SJK-Chung-Hua-Bau.html"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition"
+                  title="Muat turun aplikasi sebagai fail HTML tunggal (Offline)"
+                >
+                  <FileCode className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="hidden sm:inline">Muat Turun HTML</span>
+                </a>
+                <button
+                  onClick={() => setIsGuideOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-blue-900 hover:bg-slate-100 border border-slate-200 transition"
+                  title="Panduan pemasangan Android dan iOS"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="hidden md:inline">Pasang di Telefon</span>
+                </button>
+              </>
+            )}
 
             {/* Quick Mobile Tab Switcher */}
             <div className="flex lg:hidden bg-slate-100 p-1 rounded-xl border border-slate-200">
@@ -326,15 +340,25 @@ const App: React.FC = () => {
       <footer className="mt-auto py-6 text-center text-xs text-slate-500 border-t border-slate-200 bg-white no-print">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p>&copy; 2026 SJK Chung Hua Bau. Sistem Pelaporan OPR Rasmi.</p>
-          <div className="flex items-center gap-4 text-slate-500">
-            <button 
-              onClick={() => setIsGuideOpen(true)}
-              className="hover:text-blue-600 transition flex items-center gap-1 font-medium"
-            >
-              <Smartphone className="w-3.5 h-3.5 text-blue-600" />
-              <span>Panduan Pasang di Android & iOS</span>
-            </button>
-          </div>
+          {!isStandaloneFile && (
+            <div className="flex items-center gap-4 text-slate-500">
+              <a
+                href="/OPR-2026-SJK-Chung-Hua-Bau.html"
+                download="OPR-2026-SJK-Chung-Hua-Bau.html"
+                className="hover:text-blue-600 transition flex items-center gap-1 font-medium"
+              >
+                <FileCode className="w-3.5 h-3.5 text-blue-600" />
+                <span>Muat Turun Fail HTML (Offline)</span>
+              </a>
+              <button 
+                onClick={() => setIsGuideOpen(true)}
+                className="hover:text-blue-600 transition flex items-center gap-1 font-medium"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-blue-600" />
+                <span>Panduan Pasang di Android & iOS</span>
+              </button>
+            </div>
+          )}
         </div>
       </footer>
     </div>

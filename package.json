@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/build-standalone-html.mjs && vite build",
+    "build:html": "node scripts/build-standalone-html.mjs",
     "preview": "vite preview",
     "lint": "tsc --noEmit"
   },

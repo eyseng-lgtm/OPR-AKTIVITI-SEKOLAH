@@ -154,13 +154,10 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 no-print space-y-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <span>Tindakan Laporan OPR 2026</span>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300">
-                Google Drive Sekolah
-              </span>
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <span className="inline-block text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300">
+              Google Drive Sekolah
+            </span>
+            <p className="text-xs text-slate-500 mt-1">
               Jana fail PDF dan simpan ke dalam folder Google Drive SJK Chung Hua Bau
             </p>
           </div>
@@ -234,22 +231,6 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
           </div>
         )}
 
-        {/* Target Drive Folder Information Box */}
-        <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-emerald-950">
-          <div className="flex items-center gap-2">
-            <HardDrive className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <div>
-              <span className="font-bold">Folder Google Drive Sekolah: </span>
-              <code className="bg-emerald-100/70 px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold text-emerald-900">
-                ID: {GOOGLE_DRIVE_FOLDER_ID}
-              </code>
-            </div>
-          </div>
-
-          <span className="text-[11px] text-emerald-700">
-            Tekan <strong>"Hantar & Simpan ke Google Drive"</strong> untuk menjana PDF dan memuat naik ke folder ini.
-          </span>
-        </div>
       </div>
 
       {/* Google Drive Upload Guide Modal */}
@@ -333,10 +314,7 @@ export const ExportBar: React.FC<Props> = ({ reportRef, programName }) => {
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-                <span className="font-mono text-[11px] truncate max-w-[260px]">
-                  ID: {GOOGLE_DRIVE_FOLDER_ID}
-                </span>
+              <div className="pt-2 border-t border-slate-200 flex items-center justify-end text-xs text-slate-500">
                 <button
                   onClick={copyDriveLink}
                   className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold text-xs"
